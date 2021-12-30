@@ -126,33 +126,18 @@ gltfLoader.load(
 
 
 /**
- *  Objects
+ *  ground
  */
 
-const object1 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.2),
-    new THREE.MeshBasicMaterial({color:'red'})
-    )
-object1.position.set(-4,0,7.3)
-object1.scale.set(0.5,0.5,0.5)
-scene.add(object1)
-
-const object2 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.2),
-    new THREE.MeshBasicMaterial({color:'red'})
-    )
-object2.position.set(0,0,0)
-object2.scale.set(0.5,0.5,0.5)
-scene.add(object2)
-
-const object3 = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.2),
-    new THREE.MeshBasicMaterial({color:'red'})
-    )
-object3.position.set(3,0,7.3)
-object3.scale.set(0.5,0.5,0.5)
-scene.add(object3)
-
+ const geometry = new THREE.PlaneGeometry( 16, 22.2, 20, 20 );
+ const material = new THREE.MeshBasicMaterial( {color: 'black', side: THREE.DoubleSide} );
+ const ground = new THREE.Mesh( geometry, material );
+ material.wireframe = true;
+ ground.rotation.x = Math.PI / 2
+ ground.position.y = 2.65
+ ground.position.x = -1
+ ground.material.visible = false
+ scene.add(ground); 
 
 
 /**
@@ -160,6 +145,7 @@ scene.add(object3)
  */
 
 const raycaster = new THREE.Raycaster()
+console.log(raycaster)
 
 
 /**
@@ -200,6 +186,21 @@ window.addEventListener('mousemove', (event) => {
     // console.log(mouse)
 })
 
+window.addEventListener('dblclick', (event) => {
+    detectGround();
+})
+
+/**
+ * ScrollY
+ */
+// let scrollY = window.scrollY
+
+//  window.addEventListener('scroll', () =>
+//  {
+//      scrollY = window.scrollY
+//      console.log(scrollY)
+//  })
+
 
 /**
  * Camera
@@ -208,62 +209,79 @@ window.addEventListener('mousemove', (event) => {
 const camera = new THREE.PerspectiveCamera(70, sizes.width / sizes.height, 0.1, 100)
 camera.position.x = -5
 camera.position.y = 5.0
-camera.position.z = -5
+camera.position.z = -7.5
+
+camera.rotation.y = -Math.PI / 2
 scene.add(camera)
 
-// Controls
+// // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 // controls.maxPolarAngle = Math.PI / 2.4
-controls.target.set(-4,5,-4)
+controls.target.set(-4,5,-7.5)
+// controls.target.set(0,0,0)
 controls.enablePan = true
 controls.enableZoom = true
 
 /*
 * Move camera function 
 */
-const moveCamera = (xPosition,yPosition,zPosition,number) => {
-    // camera.position.set(xPositon,y,z)
-    // controls.target(x+0.1, y+0.1, z+0.1)
-    gsap.to(camera.position, { duration: 2, x:xPosition, y:yPosition-1, z:zPosition})
-    gsap.to(controls.target, { duration: 2, x:xPosition, y:yPosition-1, z:zPosition+(number)})
-    // controls.target.set(-4,5,-4)
+
+const cameraStates = {
+    oldX: camera.position.x,
+    oldZ: camera.position.z
 }
 
-const detectObjects = () => {
-     //raycaster
-     raycaster.setFromCamera(mouse, camera)
+const moveCamera = (xPosition,yPosition,zPosition) => {
 
-     const objectsToTest = [object1, object2, object3]
-     const intersects = raycaster.intersectObjects(objectsToTest)
-     for(const object of objectsToTest)
-     {
-         object.material.color.set('green')
-     }
- 
-     for(const intersect of intersects)
-     {
-         intersect.object.material.color.set('red')
-         console.log('intersect')
-         console.log(intersect.object.position)
-         // moveCamera(intersect.object.position.x, intersect.object.position.y, intersect.object.position.z)
-         // camera.position.x = (intersect.object.position.x)
-         // camera.position.y = (intersect.object.position.y)
-         // camera.position.z = (intersect.object.position.z)
-         const xPosition = intersect.object.position.x
-         const yPosition = intersect.object.position.y
-         const zPosition = intersect.object.position.z
-        
-        var number = 0;
-        if(intersect.object === object1){
-            number = +1;
-        }else if(intersect.object === object2){
-            number = -1;
-        }
-         moveCamera(xPosition,yPosition,zPosition,number);
-         number = 0;
-         console.log(number)
-     } 
+    // camera.position.set(xPositon,y,z)
+    // controls.target(x+0.1, y+0.1, z+0.1)
+    console.log(`new camera states${cameraStates.oldX}, ${cameraStates.oldZ}`)
+
+    var deltaX = 0;
+    var deltaZ = 0;
+
+    if(cameraStates.oldZ < zPosition){
+        deltaZ = 0.05
+    } else {
+        deltaZ = -0.05
+    }
+    if(cameraStates.oldX < xPosition){
+        deltaX = 0.05
+    } else {
+        deltaX = -0.05
+    }
+
+    gsap.to(camera.position, { duration: 1.4, x:xPosition, y:yPosition-1, z:zPosition})
+    gsap.to(controls.target, { duration: 1.4, x:xPosition+deltaX, y:yPosition-1, z:zPosition+deltaZ})
+
+  
+  
+    // controls.target.set(-4,5,-4)
+
+    cameraStates.oldX = xPosition;
+    cameraStates.oldZ = zPosition;
+    console.log(`new new camera states${cameraStates.oldX}, ${cameraStates.oldZ}`)
+
+}
+
+
+const detectGround = () => {
+    raycaster.setFromCamera(mouse, camera)
+    if(raycaster.intersectObject(ground) === true){
+        console.log('intersect')
+    }
+
+    const objectsToTest = [ground]
+    const intersects = raycaster.intersectObjects(objectsToTest)
+    for(const intersect of intersects)
+    {
+        console.log('intersect')
+        console.log(intersect.point)
+        console.log(camera.position)
+        console.log(cameraStates)
+        moveCamera(intersect.point.x,5.5,intersect.point.z);
+    }
 }
 
 
@@ -287,15 +305,6 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
-
-    //Animate moving beacons
-    object1.position.y = (Math.sin(elapsedTime) * 0.1) + 5.5
-    object2.position.y = (Math.cos(elapsedTime) * 0.1) + 5.5
-    object3.position.y = (Math.cos(elapsedTime) * 0.1) + 5.5
-
-    
-    //Raycaster
-    detectObjects();
 
     // Update controls
     controls.update()
