@@ -5,6 +5,8 @@
     padding: 0;
     /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
     color: rgb(66, 66, 66);
+    cursor: pointer;
+
 }
 
 .webgl
@@ -154,7 +156,19 @@
     .instructions h3{
         font-size: 16px;
     }
+    .close {
+    color: #ffffff;
+    margin-top: 15px;
+    padding: 28px;
   }
+  .modal {
+  
+    padding-top: 40px; /* Location of the box */
+    
+  }
+  
+
+}
 
 
 

@@ -120,7 +120,6 @@ gltfLoader.load(
         })
         // gltf.scene.scale.set(0.25, 0.25, 0.25)
         scene.add(gltf.scene)
-        console.log(gltf)
     }
 )
 
@@ -139,13 +138,40 @@ gltfLoader.load(
  ground.material.visible = false
  scene.add(ground); 
 
+ const groundCursorGeometry = new THREE.CircleGeometry( 0.35, 32 );
+ const groundCursorMaterial = new THREE.MeshBasicMaterial( { color: '#FFCA8B' , side: THREE.DoubleSide, opacity: 0.3});
+ const groundCursor = new THREE.Mesh( groundCursorGeometry, groundCursorMaterial );
+ groundCursor.material.transparent = true;
+ scene.add(groundCursor);
+
+
+
+
+groundCursor.rotation.x = Math.PI / 2
+
+const groundCursorUpdate = () => {
+    raycasterCursor.setFromCamera(mouse, camera)
+
+    const objectsToTest = [ground]
+    const intersects = raycasterCursor.intersectObjects(objectsToTest)
+    if(!moving){
+        for(const intersect of intersects)
+        {
+            groundCursor.position.y = 2.63
+            groundCursor.position.x = intersect.point.x
+            groundCursor.position.z = intersect.point.z
+            console.log('cursor updated')
+        }
+    }
+}
 
 /**
  * Raycaster
  */
 
 const raycaster = new THREE.Raycaster()
-console.log(raycaster)
+
+const raycasterCursor = new THREE.Raycaster()
 
 
 /**
@@ -196,17 +222,15 @@ window.addEventListener('touchstart', (event) => {
     var timesince = now - mylatesttap;
     if((timesince < 300) && (timesince > 0)){
 
-    console.log('DOUBLE TAP')
+    // console.log('DOUBLE TAP')
      // double tap 
      detectGround();  
  
     }else{
              // too much time to be a doubletap
-             console.log('not double tap')
+            //  console.log('not double tap')
           }
- 
     mylatesttap = new Date().getTime();    
-   
 })
 
 
@@ -252,6 +276,11 @@ const cameraStates = {
     oldZ: camera.position.z
 }
 
+var moving = false;
+const updateMoving = () => {
+    moving = false;
+}
+
 const moveCamera = (xPosition,yPosition,zPosition) => {
 
     // camera.position.set(xPositon,y,z)
@@ -272,8 +301,14 @@ const moveCamera = (xPosition,yPosition,zPosition) => {
         deltaX = -0.05
     }
 
-    gsap.to(camera.position, { duration: 1.4, x:xPosition, y:yPosition-1, z:zPosition})
-    gsap.to(controls.target, { duration: 1.4, x:xPosition+deltaX, y:yPosition-1, z:zPosition+deltaZ})
+    if(!moving)
+    {   
+        moving = true;
+        gsap.to(camera.position, { duration: 1.4, x:xPosition, y:yPosition-1, z:zPosition})
+        gsap.to(controls.target, { duration: 1.4, x:xPosition+deltaX, y:yPosition-1, z:zPosition+deltaZ})
+        setTimeout(updateMoving, 1300);
+    }
+
 
   
   
@@ -281,7 +316,7 @@ const moveCamera = (xPosition,yPosition,zPosition) => {
 
     cameraStates.oldX = xPosition;
     cameraStates.oldZ = zPosition;
-    console.log(`new new camera states${cameraStates.oldX}, ${cameraStates.oldZ}`)
+    // console.log(`new new camera states${cameraStates.oldX}, ${cameraStates.oldZ}`)
 
 }
 
@@ -289,17 +324,17 @@ const moveCamera = (xPosition,yPosition,zPosition) => {
 const detectGround = () => {
     raycaster.setFromCamera(mouse, camera)
     if(raycaster.intersectObject(ground) === true){
-        console.log('intersect')
+        // console.log('intersect')
     }
 
     const objectsToTest = [ground]
     const intersects = raycaster.intersectObjects(objectsToTest)
     for(const intersect of intersects)
     {
-        console.log('intersect')
-        console.log(intersect.point)
-        console.log(camera.position)
-        console.log(cameraStates)
+        // console.log('intersect')
+        // console.log(intersect.point)
+        // console.log(camera.position)
+        // console.log(cameraStates)
         moveCamera(intersect.point.x,5.5,intersect.point.z);
     }
 }
@@ -327,7 +362,10 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
-    controls.update()
+    controls.update();
+
+    //Cursor update
+    groundCursorUpdate();
     
     // Render
     renderer.render(scene, camera)
