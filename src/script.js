@@ -190,6 +190,26 @@ window.addEventListener('dblclick', (event) => {
     detectGround();
 })
 
+var mylatesttap;
+window.addEventListener('touchstart', (event) => {
+    var now = new Date().getTime();
+    var timesince = now - mylatesttap;
+    if((timesince < 300) && (timesince > 0)){
+
+    console.log('DOUBLE TAP')
+     // double tap 
+     detectGround();  
+ 
+    }else{
+             // too much time to be a doubletap
+             console.log('not double tap')
+          }
+ 
+    mylatesttap = new Date().getTime();    
+   
+})
+
+
 /**
  * ScrollY
  */
