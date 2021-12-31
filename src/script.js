@@ -266,6 +266,8 @@ controls.target.set(-4,5,-7.5)
 // controls.target.set(0,0,0)
 controls.enablePan = true
 controls.enableZoom = true
+controls.rotateSpeed *= -1;
+// controls.autoRotateSpeed = 0.5;
 
 /*
 * Move camera function 
